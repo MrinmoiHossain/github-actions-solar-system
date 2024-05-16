@@ -63,6 +63,9 @@ jobs:
     needs: [unit-testing, code-coverage]
     name: Contanarize
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
@@ -73,9 +76,6 @@ jobs:
         username: mrinmoihossain #${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build and push
-      permissions:
-        contents: read
-        packages: write
       uses: docker/build-push-action@v5
       with:
         context: .
