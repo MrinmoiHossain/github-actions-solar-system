@@ -73,6 +73,9 @@ jobs:
         username: mrinmoihossain #${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build and push
+      permissions:
+        contents: read
+        packages: write
       uses: docker/build-push-action@v5
       with:
         context: .
