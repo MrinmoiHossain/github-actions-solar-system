@@ -8,7 +8,7 @@ on:
         required: false
         type: string
       environment:
-        defautl: development
+        default: development
         required: true
         type: string
       kubectl-version:
