@@ -146,14 +146,8 @@ jobs:
   prod-integration-testing:
     if: github.ref == 'refs/heads/main'
     needs: [prod-deploy]
-    name: Production Integration Testing
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-    steps:
-    - name: Test Application Endpoints
-      env:
-        URL: ${{ needs.prod-deploy.outputs.app-endpoints }}
-      run: |
-        echo $URL
-        # curl https://$URL/live -s -k | jq -r .status | grep -i live
+    uses: ./.github/workflows/reuse-integration-testing.yml
+    with:
+      runner-os: ubuntu-latest
+      environment: production
+      ingress-url: ${{ needs.prod-deploy.outputs.app-endpoints }}
