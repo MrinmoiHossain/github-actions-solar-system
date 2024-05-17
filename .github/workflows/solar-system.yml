@@ -128,7 +128,7 @@ jobs:
   dev-integration-testing:
     if: contains(github.ref, 'feature/')
     needs: [dev-deploy]
-    uses: ./.github/workflow/reuse-integration-testing.yaml
+    uses: ./.github/workflows/reuse-integration-testing.yaml
     with:
       runner-os: ubuntu-latest
       environment: development
