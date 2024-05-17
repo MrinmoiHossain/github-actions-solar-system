@@ -122,11 +122,13 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: development
+    outputs:
+      APP_INGRESS_HOST: ${{ steps.applicaiton-endpoints.outputs.APP_INGRESS_HOST }}
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
     - name: Kubectl Setup
-      uses: azure/setup-kubectl@v3
+      uses: azure/setup-kubectl@v4
       with:
         version: v1.26.0
     - name: Kubeconfig Setup
@@ -153,6 +155,11 @@ jobs:
         INGRESS_IP: ${{ env.INGRESS_IP }}
     - name: Read the Kube-manifest Files
       run: cat kubernetes/development/*.yaml
+    - name: Setup the Application Endpoints
+      id: applicaiton-endpoints
+      run: |
+        echo "APP_INGRESS_HOST=$(kubectl -n ${{ vars.NAMESPACE }} get ingress -o jsonpath="{.items[0].spec.tls[0].hosts[0]}")"
+        echo "APP_INGRESS_HOST=12.13.14.16" >> $GITHUB_OUTPUT
   dev-integration-testing:
     if: contains(github.ref, 'feature/')
     needs: [dev-deploy]
@@ -162,5 +169,7 @@ jobs:
       name: development
     steps:
     - name: Test Application Endpoints
+      env:
+        URL: ${{ needs.dev-deploy.outputs.APP_INGRESS_HOST }}
       run: |
-        echo "Hello World"
+        echo $URL
