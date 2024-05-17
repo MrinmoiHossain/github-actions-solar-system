@@ -140,7 +140,7 @@ jobs:
     #   run: kubectl version --short -o yaml
     - name: Ingress IP Setup
       run: |
-        #echo "INGRESS_IP=$(kubectl -n ingress-nginx get services ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}')" >> $GITHUB_ENV
+        # echo "INGRESS_IP=$(kubectl -n ingress-nginx get services ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}')" >> $GITHUB_ENV
         echo "INGRESS_IP=12.13.14.15" >> $GITHUB_ENV
     - name: Replace Information
       uses: cschleiden/replace-tokens@v1
@@ -158,7 +158,7 @@ jobs:
     - name: Setup the Application Endpoints
       id: applicaiton-endpoints
       run: |
-        echo "APP_INGRESS_HOST=$(kubectl -n ${{ vars.NAMESPACE }} get ingress -o jsonpath="{.items[0].spec.tls[0].hosts[0]}")"
+        # echo "APP_INGRESS_HOST=$(kubectl -n ${{ vars.NAMESPACE }} get ingress -o jsonpath="{.items[0].spec.tls[0].hosts[0]}")"
         echo "APP_INGRESS_HOST=12.13.14.16" >> $GITHUB_OUTPUT
   dev-integration-testing:
     if: contains(github.ref, 'feature/')
@@ -173,3 +173,63 @@ jobs:
         URL: ${{ needs.dev-deploy.outputs.APP_INGRESS_HOST }}
       run: |
         echo $URL
+        # curl https://$URL/live -s -k | jq -r .status | grep -i live
+  prod-deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: [docker]
+    name: Production Deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    outputs:
+      APP_INGRESS_HOST: ${{ steps.applicaiton-endpoints.outputs.APP_INGRESS_HOST }}
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    - name: Kubectl Setup
+      uses: azure/setup-kubectl@v4
+      with:
+        version: v1.26.0
+    - name: Kubeconfig Setup
+      uses: azure/k8s-set-context@v4
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.KUBECONFIG }}
+    # - name: Kubectl Version
+    #   run: kubectl version --short -o yaml
+    - name: Ingress IP Setup
+      run: |
+        # echo "INGRESS_IP=$(kubectl -n ingress-nginx get services ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}')" >> $GITHUB_ENV
+        echo "INGRESS_IP=12.13.14.11" >> $GITHUB_ENV
+    - name: Replace Information
+      uses: cschleiden/replace-tokens@v1
+      with:
+        tokenPrefix: '_{_'
+        tokenSuffix: '_}_'
+        files: '["kubernetes/production/*.yaml"]'
+      env:
+        NAMESPACE: ${{ vars.NAMESPACE }}
+        REPLICAS: ${{ vars.REPLICAS }}
+        IMAGE: ghcr.io/mrinmoihossain/solar-system:${{ github.sha }}
+        INGRESS_IP: ${{ env.INGRESS_IP }}
+    - name: Read the Kube-manifest Files
+      run: cat kubernetes/production/*.yaml
+    - name: Setup the Application Endpoints
+      id: applicaiton-endpoints
+      run: |
+        # echo "APP_INGRESS_HOST=$(kubectl -n ${{ vars.NAMESPACE }} get ingress -o jsonpath="{.items[0].spec.tls[0].hosts[0]}")"
+        echo "APP_INGRESS_HOST=12.13.14.16" >> $GITHUB_OUTPUT
+  prod-integration-testing:
+    if: github.ref == 'refs/heads/main'
+    needs: [prod-deploy]
+    name: Production Integration Testing
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+    - name: Test Application Endpoints
+      env:
+        URL: ${{ needs.prod-deploy.outputs.APP_INGRESS_HOST }}
+      run: |
+        echo $URL
+        # curl https://$URL/live -s -k | jq -r .status | grep -i live
