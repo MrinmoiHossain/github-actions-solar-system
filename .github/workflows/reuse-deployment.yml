@@ -1,0 +1,72 @@
+name: Resuable Deployment Workflow
+
+on: 
+  workflow_call:
+    inputs:
+      runner-os:
+        default: ubuntu-latest
+        required: false
+        type: string
+      environment:
+        default: development
+        required: true
+        type: string
+      kubectl-version:
+        default: v1.26.0
+        required: false
+        type: string
+      k8s-manifest-dir:
+        default: kubernetes
+        required: true
+        type: string
+    outputs:
+      app-endpoints:
+        value: ${{ jobs.reuse-deploy.outputs.APP_INGRESS_HOST }}
+    secrets:
+      k8s-kubeconfig:
+        required: true
+    
+jobs:
+  reuse-deploy:
+    name: ${{ inputs.environment }} deploy
+    runs-on: ${{ inputs.runner-os }}
+    environment:
+      name: ${{ inputs.environment }}
+    outputs:
+      APP_INGRESS_HOST: ${{ steps.applicaiton-endpoints.outputs.APP_INGRESS_HOST }}
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    - name: Kubectl Setup
+      uses: azure/setup-kubectl@v4
+      with:
+        version: ${{ inputs.kubectl-version }}
+    - name: Kubeconfig Setup
+      uses: azure/k8s-set-context@v4
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.k8s-kubeconfig }}
+    # - name: Kubectl Version
+    #   run: kubectl version --short -o yaml
+    - name: Ingress IP Setup
+      run: |
+        # echo "INGRESS_IP=$(kubectl -n ingress-nginx get services ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}')" >> $GITHUB_ENV
+        echo "INGRESS_IP=12.13.14.15" >> $GITHUB_ENV
+    - name: Replace Information
+      uses: cschleiden/replace-tokens@v1
+      with:
+        tokenPrefix: '_{_'
+        tokenSuffix: '_}_'
+        files: '["${{ inputs.k8s-manifest-dir }}/*.yaml"]'
+      env:
+        NAMESPACE: ${{ vars.NAMESPACE }}
+        REPLICAS: ${{ vars.REPLICAS }}
+        IMAGE: ghcr.io/mrinmoihossain/solar-system:${{ github.sha }}
+        INGRESS_IP: ${{ env.INGRESS_IP }}
+    - name: Read the Kube-manifest Files
+      run: cat ${{ inputs.k8s-manifest-dir }}/*.yaml
+    - name: Setup the Application Endpoints
+      id: applicaiton-endpoints
+      run: |
+        # echo "APP_INGRESS_HOST=$(kubectl -n ${{ vars.NAMESPACE }} get ingress -o jsonpath="{.items[0].spec.tls[0].hosts[0]}")"
+        echo "APP_INGRESS_HOST=12.13.14.16" >> $GITHUB_OUTPUT
