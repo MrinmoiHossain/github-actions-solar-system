@@ -119,7 +119,7 @@ jobs:
     if: contains(github.ref, 'feature/')
     needs: [docker]
     uses: ./.github/workflows/reuse-deployment.yml
-    inputs:
+    with:
       runner-os: ubuntu-latest
       environment: development
       k8s-manifest-dir: kubernetes/development
