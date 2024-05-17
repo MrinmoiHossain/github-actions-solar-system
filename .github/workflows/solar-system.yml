@@ -132,6 +132,7 @@ jobs:
     with:
       runner-os: ubuntu-latest
       environment: development
+      ingress-url: ${{ needs.dev-deploy.outputs.app-endpoints }}
   prod-deploy:
     if: github.ref == 'refs/heads/main'
     needs: [docker]
