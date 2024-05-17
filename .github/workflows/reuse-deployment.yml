@@ -19,6 +19,9 @@ on:
         default: kubernetes
         required: true
         type: string
+    outputs:
+      app-endpoints:
+        value: ${{ jobs.reuse-deploy.outputs.APP_INGRESS_HOST }}
     secrets:
       k8s-kubeconfig:
         required: true
