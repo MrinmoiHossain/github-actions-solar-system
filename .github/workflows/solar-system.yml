@@ -11,8 +11,8 @@ jobs:
   unit-testing:
     name: Unit Testing
     runs-on: ubuntu-latest
-    container:
-      image: node:20
+    # container:
+    #   image: node:20
     services:
       mongo-db:
         image: siddharth67/mongo-db:non-prod
@@ -25,10 +25,10 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
-    # - name: Setup NodeJS Version
-    #   uses: actions/setup-node@v4
-    #   with:
-    #     node-version: 20
+    - name: Setup NodeJS Version
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
     - name: Get npm cache directory
       id: npm-cache-dir
       shell: bash
