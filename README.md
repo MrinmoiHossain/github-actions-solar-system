@@ -1,5 +1,7 @@
 [![Resuable Deployment Workflow](https://github.com/MrinmoiHossain/github-actions-solar-system/actions/workflows/reuse-deployment.yml/badge.svg)](https://github.com/MrinmoiHossain/github-actions-solar-system/actions/workflows/reuse-deployment.yml)
 
+[![Solar System Workflow](https://github.com/MrinmoiHossain/github-actions-solar-system/actions/workflows/solar-system.yml/badge.svg)](https://github.com/MrinmoiHossain/github-actions-solar-system/actions/workflows/solar-system.yml)
+
 # Solar System NodeJS Application
 
 A simple HTML+MongoDB+NodeJS project to display Solar System and it's planets.
